@@ -294,7 +294,7 @@ const App = {
   renderMeta() {
     const el = document.getElementById('data-freshness');
     if (typeof FPL_META !== 'undefined' && FPL_META.fetched_at) {
-      el.textContent = `Data snapshot: ${FPL_META.fetched_at.slice(0, 10)}`;
+      el.textContent = `Data snapshot: ${FPL_META.fetched_at.replace('T', ' ').slice(0, 16)} UTC`;
     }
   },
 };

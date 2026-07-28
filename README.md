@@ -28,13 +28,15 @@ node test/run-tests.js
 
 ## Refreshing data
 
-Player/fixture data is a snapshot vendored into `data/` (see decision log below). To refresh:
+Player/fixture data is a snapshot vendored into `data/` (see decision log below). It refreshes automatically: a GitHub Action (`.github/workflows/refresh-data.yml`) runs daily at 06:00 UTC, re-fetches the FPL API, and commits the changed `data/*.js` files — GitHub Pages then redeploys, so the live site is never more than ~24h stale. The header shows the snapshot timestamp.
+
+For an immediate refresh: run the workflow manually from the repo's **Actions** tab (it has a `workflow_dispatch` trigger), or locally:
 
 ```
 python3 scripts/refresh_data.py
 ```
 
-then commit the changed `data/*.js` files. The header shows the snapshot date. Worth re-running at least weekly during the season (prices, form, injuries move), and before big planning sessions.
+then commit the changed files.
 
 ## How the Best XI score works
 
@@ -86,6 +88,8 @@ The FPL API (`https://fantasy.premierleague.com/api/`) is public and free but **
 3. Hybrid (snapshot + live refresh attempt) — best of both but more code.
 
 Chose (1) for reliability and simplicity. The snapshot date is shown in the header. Revisit if manual refreshing becomes a chore (hybrid is the natural upgrade).
+
+**Update (2026-07-28):** user asked for an in-app "reload data" button. A browser-side reload would require routing traffic through a third-party CORS proxy — reopening the rejected option 2 — so instead the snapshot is now kept fresh automatically by a scheduled GitHub Action (daily 06:00 UTC + manual `workflow_dispatch`) that re-runs `scripts/refresh_data.py` and commits changes, auto-redeploying Pages. Snapshot-only architecture unchanged; staleness bounded at ~24h; on-demand refresh available from the Actions tab. A proxy-backed button remains possible later if deadline-day freshness matters.
 
 ### Best-XI ranking: composite score (2026-07-28)
 Options considered:
