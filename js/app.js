@@ -12,6 +12,7 @@ const App = {
     this.initTabs();
     this.initFilters();
     this.initBestXiControls();
+    this.initPlannerControls();
     this.renderPlayerTable();
     this.renderSquad();
     Fixtures.init();
@@ -26,6 +27,7 @@ const App = {
         btn.classList.add('active');
         document.getElementById(btn.dataset.tab).classList.add('active');
         if (btn.dataset.tab === 'tab-bestxi') this.renderBestXI();
+        if (btn.dataset.tab === 'tab-planner') this.renderPlanner();
       });
     });
   },
@@ -222,6 +224,71 @@ const App = {
       </table>
       <p class="hint">Score = composite of form, points/game, xGI per start, ICT and minutes (0–100),
         multiplied by fixture difficulty and availability. Hover a score for the breakdown.</p>`;
+  },
+
+  // --- Planner ---
+
+  initPlannerControls() {
+    const select = document.getElementById('planner-gw-select');
+    select.innerHTML = FPL_EVENTS.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+    const nextGw = FPL_EVENTS.find(e => e.is_next) || FPL_EVENTS[0];
+    select.value = String(nextGw.id);
+    select.addEventListener('change', () => this.renderPlanner());
+    document.getElementById('planner-horizon').addEventListener('change', () => this.renderPlanner());
+  },
+
+  plannerFixtureChips(teamId, gw) {
+    const fx = Fixtures.teamGwFixtures(teamId, gw);
+    if (fx.length === 0) return '<span class="fdr-blank">blank</span>';
+    return fx.map(f => `<span class="fdr fdr-${f.fdr}">${f.opponent.short_name} (${f.home ? 'H' : 'A'})</span>`).join(' ');
+  },
+
+  renderPlanner() {
+    const container = document.getElementById('planner-result');
+    if (this.squad.length !== 15) {
+      container.innerHTML = `<p class="hint">Complete your 15-player squad first (currently ${this.squad.length}/15).</p>`;
+      return;
+    }
+    const startGw = parseInt(document.getElementById('planner-gw-select').value, 10);
+    const horizon = parseInt(document.getElementById('planner-horizon').value, 10);
+    const result = Planner.plan(this.squad, FPL_PLAYERS, this.stats, FPL_FIXTURES, startGw, horizon);
+
+    const chipBadge = (week, label, cls, why) => week
+      ? `<div class="chip-advice ${cls}"><strong>${label}</strong> → GW${week.gw} <span class="hint">${why}</span></div>`
+      : '';
+    const chips = result.chips;
+    const chipsHtml = chips ? `
+      <h3>Chip advice for this window</h3>
+      ${chipBadge(chips.tripleCaptain, 'Triple Captain', 'chip-tc',
+        `${chips.tripleCaptain.xi.captain.player.web_name} has the window's highest captain score (${chips.tripleCaptain.xi.captain.score.total.toFixed(1)})`)}
+      ${chipBadge(chips.benchBoost, 'Bench Boost', 'chip-bb',
+        `strongest bench of the window (${chips.benchBoost.benchTotal.toFixed(1)} across 4 players)`)}
+      ${chips.freeHit
+        ? chipBadge(chips.freeHit, 'Free Hit', 'chip-fh',
+          `GW${chips.freeHit.gw} is much weaker than the rest of the window — consider a one-week rebuild`)
+        : '<div class="chip-advice chip-none"><strong>Free Hit</strong> → hold <span class="hint">no unusually weak week in this window</span></div>'}
+      <p class="hint">Chips are each usable once per half-season (wildcard/free hit from GW2). Advice only compares weeks inside this window.</p>` : '';
+
+    container.innerHTML = chipsHtml + result.weeks.map(w => {
+      const transferHtml = w.transfer
+        ? `<p class="transfer-line">Transfer: <span class="transfer-out">${w.transfer.out.web_name} (${this.teamById.get(w.transfer.out.team).short_name})</span>
+             → <span class="transfer-in">${w.transfer.in.web_name} (${this.teamById.get(w.transfer.in.team).short_name})</span>
+             <span class="hint">+${w.transfer.gain.toFixed(1)} over remaining window · bank ${Rules.formatPrice(w.bank)}</span></p>`
+        : '<p class="transfer-line hint">No transfer worth making — bank it.</p>';
+      if (!w.xi) return `<div class="planner-week"><h3>GW${w.gw}</h3>${transferHtml}<p class="hint">No valid XI.</p></div>`;
+      const xiHtml = w.xi.xi.map(s =>
+        `<div class="planner-player">
+          <span>${s.player.web_name}${s === w.xi.captain ? ' <span class="cap-badge">C</span>' : ''}</span>
+          <span>${this.plannerFixtureChips(s.player.team, w.gw)}</span>
+          <span class="num">${s.score.total.toFixed(1)}</span>
+        </div>`).join('');
+      return `<div class="planner-week">
+        <h3>GW${w.gw} — ${w.xi.formation} · XI total ${w.xi.total.toFixed(1)}</h3>
+        ${transferHtml}
+        <div class="planner-xi">${xiHtml}</div>
+        <p class="hint">Bench: ${w.xi.bench.map(s => s.player.web_name).join(', ')}</p>
+      </div>`;
+    }).join('');
   },
 
   renderMeta() {

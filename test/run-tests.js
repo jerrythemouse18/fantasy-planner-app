@@ -7,12 +7,12 @@ const vm = require('vm');
 
 const ctx = vm.createContext({ console });
 let source = '';
-for (const file of ['js/rules.js', 'js/scoring.js']) {
+for (const file of ['js/rules.js', 'js/scoring.js', 'js/planner.js']) {
   source += fs.readFileSync(path.join(__dirname, '..', file), 'utf8') + '\n';
 }
 // const declarations don't land on the context global, so evaluate the
 // module names in one script and return them.
-const { Rules, Scoring } = vm.runInContext(source + '\n;({ Rules, Scoring });', ctx);
+const { Rules, Scoring, Planner } = vm.runInContext(source + '\n;({ Rules, Scoring, Planner });', ctx);
 
 let passed = 0, failed = 0;
 function check(name, actual, expected) {
@@ -117,6 +117,47 @@ mids[0].form = '20.0'; mids[0].status = 'i';
 const xi2 = Scoring.bestXI(squad2, Scoring.populationStats(squad2), gwFixtures);
 check('injured player benched despite high form',
   xi2.xi.some(s => s.player.id === mids[0].id), false);
+
+// --- Planner tests ---
+// World: squad teams 1-10, market star on team 11. GW1: everyone easy.
+// GW2: team 1 blank, team 11 easy. GW3: all easy again.
+const pSquad = fullSquad();
+const market = pSquad.concat([
+  player({ id: 900, web_name: 'Star', team: 11, element_type: 3, now_cost: 60, form: '9.9', points_per_game: '9.0' }),
+]);
+const fx = [];
+let fid = 1;
+const easy = (h, a, gw) => fx.push({ id: fid++, event: gw, team_h: h, team_a: a, team_h_difficulty: 2, team_a_difficulty: 2 });
+for (const gw of [1, 2, 3]) {
+  for (let t = 1; t <= 12; t += 2) {
+    if (gw === 2 && (t === 1 || t === 2)) continue; // team 1+2 blank in GW2
+    easy(t, t + 1, gw);
+  }
+  if (gw === 2) easy(11, 12, 2);
+}
+const pStats = Scoring.populationStats(market);
+const plan = Planner.plan(pSquad, market, pStats, fx, 1, 3);
+
+check('plan covers 3 weeks', plan.weeks.map(w => w.gw), [1, 2, 3]);
+check('plan clamps at GW38', Planner.plan(pSquad, market, pStats, fx, 37, 3).weeks.length, 2);
+check('each planned week has a valid XI', plan.weeks.every(w => w.xi && w.xi.xi.length === 11), true);
+check('transfer suggested brings in the market star',
+  plan.weeks.some(w => w.transfer && w.transfer.in.id === 900), true);
+check('at most one transfer per week', plan.weeks.every(w => !w.transfer || w.transfer.in), true);
+check('bank stays non-negative after transfers', plan.weeks.every(w => w.bank >= 0), true);
+check('chip advice present', !!plan.chips, true);
+check('triple captain targets a planned week',
+  plan.weeks.some(w => w.gw === plan.chips.tripleCaptain.gw), true);
+check('free hit flags the blank-hit week or holds',
+  plan.chips.freeHit === null || plan.chips.freeHit.gw === 2, true);
+
+// transfer respects 3-per-club: squad already has 3 from team 11 -> no 4th
+const clubSquad = fullSquad();
+clubSquad[2].team = 11; clubSquad[3].team = 11; clubSquad[4].team = 11;
+const clubPlan = Planner.plan(clubSquad, market, Scoring.populationStats(market), fx, 1, 3);
+check('transfer respects 3-per-club',
+  clubPlan.weeks.every(w => !w.transfer || Rules.validateSquad(w.squad).errors
+    .every(e => !e.includes('More than 3'))), true);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

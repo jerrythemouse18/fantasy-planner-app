@@ -8,6 +8,7 @@ A Fantasy Premier League (FPL) squad and fixture planner for the 2026/27 season.
 
 - **Squad Builder** — pick a 15-player squad from the real Premier League player list with FPL rules enforced live: £100.0m budget, 2 GKP / 5 DEF / 5 MID / 3 FWD, max 3 players per club. Filter and sort players by price, points, form, xGI, ICT, ownership, and value (points per £m). Squad persists in localStorage.
 - **Best XI** — for any gameweek, ranks your 15 players with a transparent composite score and picks the highest-scoring valid formation (1 GK, 3–5 DEF, 2–5 MID, 1–3 FWD), plus a captain pick and ordered bench. Hover a score to see its breakdown.
+- **Planner** — looks ahead 2–5 gameweeks from any starting week: suggests one free transfer per week (only when it clears a worthwhile-gain threshold), shows each week's best XI with the evolving squad, and recommends where in the window to play Triple Captain (best captain score), Bench Boost (strongest bench) and Free Hit (a week much weaker than the rest — usually blanks).
 - **Fixtures** — full 38-gameweek season ticker (20 teams × 38 GWs, colour-coded by FPL's Fixture Difficulty Rating) and a per-gameweek match list with deadlines.
 
 ## Run locally
@@ -64,6 +65,7 @@ css/style.css
 js/rules.js         FPL squad rules + validation (pure logic)
 js/scoring.js       composite score + best-XI picker (pure logic)
 js/storage.js       localStorage persistence (squad ids)
+js/planner.js       multi-GW transfer plan + chip advice (pure logic)
 js/fixtures.js      season ticker + gameweek detail rendering
 js/app.js           tabs, squad builder UI, best-XI view
 data/*.js           vendored FPL API snapshots (browser globals)
@@ -111,6 +113,13 @@ User asked for a dark UI (no white background). Single dark theme rather than a 
 ### Squad interactions: row-click + over-budget drafting (2026-07-28)
 - Player rows toggle squad membership on click (originally an Add/Remove button per row). Rows that can't be added (position full, 3-per-club) are dimmed with the reason in the tooltip.
 - The £100m budget is **not** enforced at add time: user wanted to draft over budget and see the negative bank (shown red) while iterating. `Rules.validateSquad` still flags over-budget squads, so "✓ complete and valid" only appears within budget.
+
+### Multi-gameweek planner + chip advice (2026-07-28)
+User wanted to plan ahead using the weekly free transfer and the chips (Triple Captain, Bench Boost, Free Hit). Model chosen — greedy week-by-week, deliberately simple:
+- **One free transfer per week, no point hits.** Each week the planner searches all same-position swaps (market pruned to top 40 per position by base score, injured/suspended excluded) and applies the one with the biggest summed composite-score gain over the *remaining* window — but only if it gains ≥ 3; otherwise "bank it". Budget uses bank + sale price at current prices (no price-change or sell-fee modelling).
+- **Chip advice compares weeks within the window only**: Triple Captain → week with the highest captain score; Bench Boost → strongest 4-player bench; Free Hit → only flagged when a week's XI total drops below 85% of the window's best (blank-heavy or brutal fixtures), since a Free Hit squad is temporary.
+- Alternatives considered: full multi-week optimization (MILP solver, like sertalpbilal's tools) — rejected for now as it needs a projection model and a solver dependency; hit-taking (-4) transfers — rejected to keep suggestions conservative; banking transfers to use 2+ in a later week — not modelled yet, a natural next step.
+- Not modelled: wildcard advice (it rebuilds the whole squad — different problem), captaincy across double gameweeks beyond fixture-sum, price changes during the window, chips already used.
 
 ### Season-timing caveat (2026-07-28)
 Until GW1 (deadline 21 Aug 2026), player stats in the snapshot are **last season's totals** and `form` is 0.0 — so pre-season Best XI rankings lean on points-per-game/xGI/ICT from 2025/26. Promoted clubs (Coventry, Hull, Ipswich) have no PL data. Rankings get meaningful from GW2 onwards; refresh the snapshot after each gameweek.

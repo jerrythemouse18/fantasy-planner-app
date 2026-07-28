@@ -232,6 +232,42 @@ h2 { font-size: 1.1rem; margin: 24px 0 8px; }
   z-index: 2;
 }
 
+/* Planner */
+.planner-week {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+.planner-week h3 { margin: 0 0 6px; font-size: 0.95rem; }
+.transfer-line { margin: 4px 0 10px; font-size: 0.85rem; }
+.transfer-out { color: var(--danger); text-decoration: line-through; }
+.transfer-in { color: var(--accent-2); font-weight: 600; }
+.planner-xi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 4px 16px;
+}
+.planner-player {
+  display: grid;
+  grid-template-columns: 1fr auto 3em;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.82rem;
+  padding: 2px 0;
+}
+.chip-advice {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-2);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 6px 0;
+  font-size: 0.85rem;
+}
+.chip-advice.chip-none { border-left-color: var(--border); }
+
 /* Gameweek match list */
 .gw-deadline { color: var(--muted); font-size: 0.8rem; }
 .match-row {
