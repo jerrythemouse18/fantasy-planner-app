@@ -23,6 +23,7 @@ body {
 }
 
 header {
+  position: relative;
   background: var(--accent);
   color: #fff;
   padding: 14px 20px 0;
@@ -36,6 +37,25 @@ header h1 {
   margin-left: 12px;
   font-size: 0.75rem;
   opacity: 0.75;
+}
+.version-badge {
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  font-size: 0.72rem;
+}
+.version-badge a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+}
+.version-badge a:hover { color: #fff; }
+.vb-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  margin-right: 5px;
 }
 .tabs { margin-top: 10px; }
 .tab-btn {
