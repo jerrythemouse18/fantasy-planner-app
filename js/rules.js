@@ -43,9 +43,8 @@ const Rules = {
     if (clubCount >= this.MAX_PER_CLUB) {
       return { ok: false, reason: 'Max 3 players per club' };
     }
-    if (this.cost(squad) + player.now_cost > this.BUDGET) {
-      return { ok: false, reason: 'Over £100.0m budget' };
-    }
+    // Budget is deliberately NOT enforced here: going over £100.0m is allowed
+    // while drafting, surfaced as a negative bank. validateSquad still flags it.
     return { ok: true };
   },
 

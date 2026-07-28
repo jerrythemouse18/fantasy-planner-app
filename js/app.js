@@ -87,12 +87,11 @@ const App = {
       const flag = Scoring.UNAVAILABLE_STATUSES[p.status]
         ? ` <span class="status-flag" title="${p.news || Scoring.UNAVAILABLE_STATUSES[p.status]}">⛔</span>`
         : (p.status === 'd' ? ` <span class="status-flag" title="${p.news || 'Doubtful'}">⚠️</span>` : '');
-      const btn = inSquad
-        ? `<button class="btn-remove" data-id="${p.id}">Remove</button>`
-        : (verdict.ok
-          ? `<button class="btn-add" data-id="${p.id}">Add</button>`
-          : `<button class="btn-add" disabled title="${verdict.reason}">Add</button>`);
-      return `<tr class="${inSquad ? 'row-in-squad' : ''}">
+      const disabled = !inSquad && !verdict.ok;
+      const cls = inSquad ? 'row-in-squad' : (disabled ? 'row-disabled' : '');
+      const title = inSquad ? 'Click to remove from squad'
+        : (disabled ? verdict.reason : 'Click to add to squad');
+      return `<tr class="${cls}" data-id="${p.id}" title="${title}">
         <td>${p.web_name}${flag}</td>
         <td>${this.teamById.get(p.team).short_name}</td>
         <td>${Rules.POSITION_NAMES[p.element_type]}</td>
@@ -103,14 +102,16 @@ const App = {
         <td class="num">${p.expected_goal_involvements}</td>
         <td class="num">${p.ict_index}</td>
         <td class="num">${p.selected_by_percent}%</td>
-        <td>${btn}</td>
       </tr>`;
     }).join('');
 
-    document.querySelectorAll('#player-rows .btn-add:not([disabled])').forEach(b =>
-      b.addEventListener('click', () => this.addPlayer(parseInt(b.dataset.id, 10))));
-    document.querySelectorAll('#player-rows .btn-remove').forEach(b =>
-      b.addEventListener('click', () => this.removePlayer(parseInt(b.dataset.id, 10))));
+    document.querySelectorAll('#player-rows tr:not(.row-disabled)').forEach(tr =>
+      tr.addEventListener('click', () => this.togglePlayer(parseInt(tr.dataset.id, 10))));
+  },
+
+  togglePlayer(id) {
+    if (this.squad.some(p => p.id === id)) this.removePlayer(id);
+    else this.addPlayer(id);
   },
 
   addPlayer(id) {

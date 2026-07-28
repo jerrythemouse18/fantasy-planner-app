@@ -105,6 +105,13 @@ Researched the existing app landscape (Fantasy Football Fix, LiveFPL, Fantasy Fo
 ### Stack: vanilla static site (2026-07-28)
 Same conventions as pokemon-champions-team-analyzer / mahjong-winning-hands / sg-bus-arrivals: no framework, no build, classic script tags with object-literal namespaces, localStorage, GitHub Pages from `main`, zero-dep Node test harness for pure logic.
 
+### Dark theme (2026-07-28)
+User asked for a dark UI (no white background). Single dark theme rather than a light/dark toggle — less surface area, and it's a personal app. FDR chip colours were re-derived for the dark surface and checked with the palette validator: green shades for easy (1–2), neutral dark gray for 3, salmon/red for hard (4–5). Adjacent FDR pairs pass colour-vision-deficiency separation except where the chip's text label already carries the value — every chip shows the opponent/difficulty as text, so colour never carries meaning alone.
+
+### Squad interactions: row-click + over-budget drafting (2026-07-28)
+- Player rows toggle squad membership on click (originally an Add/Remove button per row). Rows that can't be added (position full, 3-per-club) are dimmed with the reason in the tooltip.
+- The £100m budget is **not** enforced at add time: user wanted to draft over budget and see the negative bank (shown red) while iterating. `Rules.validateSquad` still flags over-budget squads, so "✓ complete and valid" only appears within budget.
+
 ### Season-timing caveat (2026-07-28)
 Until GW1 (deadline 21 Aug 2026), player stats in the snapshot are **last season's totals** and `form` is 0.0 — so pre-season Best XI rankings lean on points-per-game/xGI/ICT from 2025/26. Promoted clubs (Coventry, Hull, Ipswich) have no PL data. Rankings get meaningful from GW2 onwards; refresh the snapshot after each gameweek.
 

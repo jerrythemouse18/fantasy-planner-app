@@ -1,17 +1,22 @@
 :root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --text: #1a1d21;
-  --muted: #6b7280;
-  --border: #e2e5e9;
+  color-scheme: dark;
+  --bg: #0d0d0d;          /* page plane */
+  --surface: #1a1a19;     /* cards, tables */
+  --surface-2: #232322;   /* table headers, sticky cells */
+  --text: #f2f2f0;
+  --secondary: #c3c2b7;
+  --muted: #898781;
+  --border: #2c2c2a;
   --accent: #37003c;      /* PL purple */
   --accent-2: #00ff87;    /* PL green */
-  --danger: #c0392b;
-  --fdr1: #2e7d32;
-  --fdr2: #66bb6a;
-  --fdr3: #cfd8dc;
-  --fdr4: #ef5350;
-  --fdr5: #b71c1c;
+  --danger: #e66767;
+  --ok: #0ca30c;
+  /* FDR status scale (labels on every chip carry the value; color never alone) */
+  --fdr1: #57c46f;
+  --fdr2: #0ca30c;
+  --fdr3: #383835;
+  --fdr4: #ec835a;
+  --fdr5: #d03b3b;
 }
 
 * { box-sizing: border-box; }
@@ -95,7 +100,7 @@ h2 { font-size: 1.1rem; margin: 24px 0 8px; }
 .over-budget { color: var(--danger); }
 
 .squad-status { margin: 8px 0; font-size: 0.85rem; }
-.squad-ok { color: #2e7d32; font-weight: 600; }
+.squad-ok { color: var(--ok); font-weight: 600; }
 .squad-err {
   display: inline-block;
   color: var(--danger);
@@ -115,7 +120,7 @@ h2 { font-size: 1.1rem; margin: 24px 0 8px; }
   position: relative;
   font-size: 0.85rem;
 }
-.slot-empty { color: var(--muted); text-align: center; border-style: dashed; }
+.slot-empty { color: var(--muted); text-align: center; border-style: dashed; background: transparent; }
 .slot-name { display: block; font-weight: 600; padding-right: 16px; }
 .slot-meta { display: block; color: var(--muted); font-size: 0.75rem; }
 .slot-x {
@@ -144,6 +149,7 @@ h2 { font-size: 1.1rem; margin: 24px 0 8px; }
   border-radius: 6px;
   font-size: 0.85rem;
   background: var(--surface);
+  color: var(--text);
 }
 .filter-bar input[type="search"] { min-width: 200px; }
 
@@ -163,25 +169,21 @@ h2 { font-size: 1.1rem; margin: 24px 0 8px; }
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
-.data-table th { background: #fafbfc; font-weight: 600; }
-.data-table .num { text-align: right; }
-.row-in-squad { background: #f0faf4; }
+.data-table th { background: var(--surface-2); font-weight: 600; }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 
-.btn-add, .btn-remove {
-  padding: 4px 12px;
-  border-radius: 5px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-.btn-add { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-add[disabled] { background: var(--border); border-color: var(--border); color: var(--muted); cursor: not-allowed; }
-.btn-remove { background: var(--surface); color: var(--danger); }
+/* Row-click selection */
+#player-rows tr { cursor: pointer; }
+#player-rows tr:hover { background: rgba(255, 255, 255, 0.05); }
+.row-in-squad { background: rgba(0, 255, 135, 0.08); }
+.row-in-squad td:first-child { box-shadow: inset 3px 0 0 var(--accent-2); }
+.row-disabled { opacity: 0.45; cursor: not-allowed !important; }
+.row-disabled:hover { background: transparent !important; }
 
 .status-flag { font-size: 0.75rem; }
 .cap-badge {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-2);
+  color: #0b0b0b;
   border-radius: 50%;
   padding: 1px 6px;
   font-size: 0.7rem;
@@ -189,7 +191,7 @@ h2 { font-size: 1.1rem; margin: 24px 0 8px; }
 }
 .bestxi-summary { font-size: 0.95rem; }
 
-/* FDR chips */
+/* FDR chips — status scale; the text label always carries the value */
 .fdr {
   display: inline-block;
   border-radius: 4px;
@@ -198,11 +200,11 @@ h2 { font-size: 1.1rem; margin: 24px 0 8px; }
   font-weight: 600;
   margin: 1px;
 }
-.fdr-1 { background: var(--fdr1); color: #fff; }
-.fdr-2 { background: var(--fdr2); color: #fff; }
-.fdr-3 { background: var(--fdr3); color: #333; }
-.fdr-4 { background: var(--fdr4); color: #fff; }
-.fdr-5 { background: var(--fdr5); color: #fff; }
+.fdr-1 { background: var(--fdr1); color: #0b0b0b; }
+.fdr-2 { background: var(--fdr2); color: #0b0b0b; }
+.fdr-3 { background: var(--fdr3); color: var(--secondary); }
+.fdr-4 { background: var(--fdr4); color: #0b0b0b; }
+.fdr-5 { background: var(--fdr5); color: #ffffff; }
 .fdr-blank { color: var(--muted); }
 
 /* Fixture ticker */
@@ -221,11 +223,11 @@ h2 { font-size: 1.1rem; margin: 24px 0 8px; }
   border: 1px solid var(--border);
   text-align: center;
 }
-.ticker-table th { background: #fafbfc; position: sticky; top: 0; }
+.ticker-table th { background: var(--surface-2); position: sticky; top: 0; }
 .ticker-team {
   position: sticky;
   left: 0;
-  background: #fafbfc !important;
+  background: var(--surface-2) !important;
   font-weight: 700;
   z-index: 2;
 }

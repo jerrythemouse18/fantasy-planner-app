@@ -58,10 +58,12 @@ check('canAdd rejects 4th from same club',
 check('canAdd rejects 3rd GK',
   Rules.canAdd([player({ element_type: 1, team: 1 }), player({ element_type: 1, team: 2 })],
     player({ element_type: 1, team: 3 })).ok, false);
-check('canAdd rejects over budget',
-  Rules.canAdd([player({ now_cost: 960 })], player({ now_cost: 50, team: 2 })).ok, false);
+check('canAdd allows going over budget (negative bank shown instead)',
+  Rules.canAdd([player({ now_cost: 960 })], player({ now_cost: 50, team: 2 })).ok, true);
 check('canAdd allows exactly on budget',
   Rules.canAdd([player({ now_cost: 950 })], player({ now_cost: 50, team: 2 })).ok, true);
+check('validateSquad still flags over budget',
+  (() => { const s = fullSquad(); s[0].now_cost = 1000; return Rules.validateSquad(s).ok; })(), false);
 
 check('validateSquad ok for valid 15', Rules.validateSquad(fullSquad()).ok, true);
 check('validateSquad rejects 14', Rules.validateSquad(fullSquad().slice(1)).ok, false);
